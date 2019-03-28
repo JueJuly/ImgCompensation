@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+# Temporary  folder
+./doc/*
+./x64/*
+./Debug/*
+./Release/*
