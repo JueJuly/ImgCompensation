@@ -3,18 +3,17 @@
 
 int main(void)
 {
-	Gcout; cout << string(32, '-') << endl; Wcout;
-	Rcout; cout << "对图像饱和度补偿测试!" << endl; Wcout;
+	/*Gcout;*/ cout << string(32, '-') << endl;/* Wcout;*/
+	/*Rcout;*/ cout << "对图像饱和度补偿测试!" << endl; /*Wcout;*/
 
 	//ImgSatCompensationTest();
-	//MessageBox(NULL, TEXT("SetConsoleMode"), TEXT("Console Error"),MB_OK);
 	//testColorTransfer();
 
 	//ImgSatCompenTest1();
-	//ImgSatCompenTest2();
-	ImgSatCompenTest3();
+	ImgSatCompenTest2();
+	//ImgSatCompenTest3();
 
-	Gcout; cout << string(32, '-') << endl; Wcout;
+	/*Gcout; */cout << string(32, '-') << endl; /*Wcout;*/
 	system("pause");
 	return 0;
 }
@@ -22,10 +21,23 @@ int main(void)
 
 int ImgSatCompensationTest()
 {
-	string imgPath = "E:/matlab_project/mdlt/mdlt/images/case1/3.jpg";
+	//string imgPath = "E:/matlab_project/mdlt/mdlt/images/case1/3.jpg";
+	string strFrontImg = "E:/matlab_project/mdlt/mdlt/diffAngleImg/20DU_front.png";
 
 	Mat srcHSV, sat, satAdj, dstMerge, dst;     //sat - saturation饱和度分量
-	Mat imageAwb = imread(imgPath, IMREAD_COLOR);
+
+#if 1
+	Mat imageAwb, srcImg;
+	srcImg = imread(strFrontImg, IMREAD_COLOR);
+
+	//从原始图像中裁剪重合区域;
+	Rect OverlapRect(0, 0, 320, 320);
+
+	imageAwb = srcImg(OverlapRect).clone();
+#else
+	Mat imageAwb = imread(strFrontImg, IMREAD_COLOR);
+#endif
+
 	vector<Mat> channels, channels1;
 	double p1, p2, p3;
 
@@ -64,14 +76,14 @@ int ImgSatCompensationTest()
 	{
 		for (int j = 0; j < sat.cols; j++)
 		{
-			if (i > sat.rows / 2 && i < sat.rows * 3 / 4 &&
+			/*if (i > sat.rows / 2 && i < sat.rows * 3 / 4 &&
 				j > sat.cols / 2 && j < sat.cols * 3 / 4)
 			{
 				uchar val = sat.at<uchar>(i, j);
 				satAdj.at<uchar>(i, j) = (uchar)(val + p1 * val * val + p2 * val + p3);
-			}
-			/*uchar val = sat.at<uchar>(i, j);
-			satAdj.at<uchar>(i, j) = (uchar)(val + p1 * val * val + p2 * val + p3);*/
+			}*/
+			uchar val = sat.at<uchar>(i, j);
+			satAdj.at<uchar>(i, j) = (uchar)(val + p1 * val * val + p2 * val + p3);
 		}
 	}
 
@@ -246,7 +258,7 @@ float CalSatMeanVal(uchar *r, uchar *g, uchar *b, int num)
 }
 
 /*
- @breif Image Saturation gain compensation process;
+ @brief Image Saturation gain compensation process;
  @param inout uchar  *rgb     color image pixel value pointer
  @param in    int    width    image width
  @param in    int    height   image height
@@ -288,7 +300,7 @@ void ImgSatGainCompensate(uchar *rgb, int width, int height, float gainVal)
 }
 
 /*
- @breif test function;
+ @brief test RGB2HSV and HSV2RGB function;
  */
 void testColorTransfer()
 {
@@ -506,7 +518,6 @@ int ImgSatCompenTest1()
 		k++;
 	}
 
-
 	float SMeanVal_F = CalSatMeanVal(R_F, G_F, B_F, numF);
 	cout << "==================" << endl;
 	float SMeanVal_L = CalSatMeanVal(R_L, G_L, B_L, numL);
@@ -586,6 +597,9 @@ int ImgSatCompenTest1()
 	return 0;
 }
 
+/*
+ @brief 对整个重合区域求S的平均值；然后进行alpha 融合补偿
+ */
 int ImgSatCompenTest2()
 {
 	string strLeftImg = "E:/matlab_project/mdlt/mdlt/diffAngleImg/20DU_left.png";
@@ -604,6 +618,112 @@ int ImgSatCompenTest2()
 	imshow("srcLeftImg", leftImgOverlap);
 	imshow("srcFrontImg", frontImgOverlap);
 
+	vector<ValidRegion> leftImgValidReg;
+	vector<ValidRegion> frontImgValidReg;
+
+	//-------------------------------------------------
+	//得到有效区域的起始和结束点坐标;
+	for (int y = 0; y < OverlapRect.height; y++)
+	{
+		bool stFlagL = false;
+		bool edFlagL = false;
+		ValidRegion validReg;
+
+		for (int x = 3; x < OverlapRect.width - 3; x++)
+		{
+			Vec3b PrePixel_L = leftImgOverlap.at<Vec3b>(y, x - 1); //previous pixel for left image;
+			Vec3b CurPixel_L = leftImgOverlap.at<Vec3b>(y, x);   //current pixel for left image;
+
+			//得到左相机有效区域的起始、结束点;
+			//----------------------------------------------
+			if ((PrePixel_L[0] == 0 && PrePixel_L[1] == 0 && PrePixel_L[2] == 0) &&
+				(CurPixel_L[0] != 0 || CurPixel_L[1] != 0 || CurPixel_L[2] != 0))
+			{
+				validReg.stPt.x = x;
+				validReg.stPt.y = y;
+				//cout << "start point : " << Point(x, y) << endl;
+				stFlagL = true;
+			}
+
+			if ((PrePixel_L[0] != 0 || PrePixel_L[1] != 0 || PrePixel_L[2] != 0) &&
+				(CurPixel_L[0] == 0 && CurPixel_L[1] == 0 && CurPixel_L[2] == 0))
+			{
+				validReg.edPt = Point(x, y);
+				edFlagL = true;
+			}
+
+			if (stFlagL == true && edFlagL == true)
+			{
+				leftImgValidReg.push_back(validReg);
+				stFlagL = false;
+				edFlagL = false;
+				break;
+			}
+
+		}
+	}
+
+	//-----------------------------------
+	for (int y = 0; y < OverlapRect.height; y++)
+	{
+		bool stFlagF = false;
+		bool edFlagF = false;
+		ValidRegion validReg;
+
+		for (int x = 3; x < OverlapRect.width - 3; x++)
+		{
+			Vec3b PrePixel_F = frontImgOverlap.at<Vec3b>(y, x - 1); //previous pixel for front image;
+			Vec3b CurPixel_F = frontImgOverlap.at<Vec3b>(y, x);   //current pixel for front image;
+
+			//得到前相机有效区域的起始、结束点;
+			//-----------------------------------------------
+			if ((PrePixel_F[0] == 0 && PrePixel_F[1] == 0 && PrePixel_F[2] == 0) &&
+				(CurPixel_F[0] != 0 || CurPixel_F[1] != 0 || CurPixel_F[2] != 0))
+			{
+				validReg.stPt = Point(x, y);
+				stFlagF = true;
+			}
+
+			if ((PrePixel_F[0] != 0 || PrePixel_F[1] != 0 || PrePixel_F[2] != 0) &&
+				(CurPixel_F[0] == 0 && CurPixel_F[1] == 0 && CurPixel_F[2] == 0))
+			{
+				validReg.edPt = Point(x, y);
+				edFlagF = true;
+			}
+
+			if (stFlagF == true && edFlagF == true)
+			{
+				frontImgValidReg.push_back(validReg);
+				stFlagF = false;
+				edFlagF = false;
+				break;
+			}
+
+		}
+	}
+	//-------------------------------------------------
+
+	/*int numF = frontImgValidReg.size();
+	int numL = leftImgValidReg.size();*/
+
+	//计算有效区域中间线的平均值;
+	//uchar *R_F = new uchar[numF];
+	//uchar *G_F = new uchar[numF];
+	//uchar *B_F = new uchar[numF];
+
+	//uchar *R_L = new uchar[numL];
+	//uchar *G_L = new uchar[numL];
+	//uchar *B_L = new uchar[numL];
+
+
+	//memset(R_F, 0, sizeof(uchar) * numF);
+	//memset(G_F, 0, sizeof(uchar) * numF);
+	//memset(B_F, 0, sizeof(uchar) * numF);
+
+	//memset(R_L, 0, sizeof(uchar) * numL);
+	//memset(G_L, 0, sizeof(uchar) * numL);
+	//memset(B_L, 0, sizeof(uchar) * numL);
+
 	float meanValF = 0;
 	float meanValL = 0;
 	int numL = 0;
@@ -611,7 +731,6 @@ int ImgSatCompenTest2()
 
 	for (int y = 0; y < OverlapRect.height; y++)
 	{
-
 		for (int x = 3; x < OverlapRect.width - 3; x++)
 		{
 			uchar r_F = frontImgOverlap.at<Vec3b>(y, x)[2];
@@ -644,46 +763,102 @@ int ImgSatCompenTest2()
 	meanValF /= numF;
 	meanValL /= numL;
 
-	for (int y = 0; y < OverlapRect.height; y++)
+	//for (int y = 0; y < OverlapRect.height; y++)
+	//{
+	//	for (int x = 3; x < OverlapRect.width - 3; x++)
+	//	{
+	//		uchar r_F = frontImgOverlap.at<Vec3b>(y, x)[2];
+	//		uchar g_F = frontImgOverlap.at<Vec3b>(y, x)[1];
+	//		uchar b_F = frontImgOverlap.at<Vec3b>(y, x)[0];
+
+	//		uchar r_L = leftImgOverlap.at<Vec3b>(y, x)[2];
+	//		uchar g_L = leftImgOverlap.at<Vec3b>(y, x)[1];
+	//		uchar b_L = leftImgOverlap.at<Vec3b>(y, x)[0];
+
+	//		int h_F = 0, s_F = 0, v_F = 0;
+	//		int h_L = 0, s_L = 0, v_L = 0;
+
+	//		if (r_F != 0 || g_F != 0 || b_F != 0)
+	//		{
+	//			//numF++;
+	//			RGB2HSV(&h_F, &s_F, &v_F, r_F, g_F, b_F);
+	//			s_F = meanValF;
+	//			HSV2RGB(&r_F, &g_F, &b_F, h_F, s_F, v_F);
+	//			frontImgOverlap.at<Vec3b>(y, x)[2] = r_F;
+	//			frontImgOverlap.at<Vec3b>(y, x)[1] = g_F;
+	//			frontImgOverlap.at<Vec3b>(y, x)[0] = b_F;
+	//			//meanValF += s_F;
+	//		}
+
+	//		if (r_L != 0 || g_L != 0 || b_L != 0)
+	//		{
+	//			//numL++;
+	//			RGB2HSV(&h_L, &s_L, &v_L, r_L, g_L, b_L);
+	//			s_L = meanValL;
+	//			HSV2RGB(&r_L, &g_L, &b_L, h_L, s_L, v_L);
+	//			//meanValL += s_L;
+	//			leftImgOverlap.at<Vec3b>(y, x)[2] = r_L;
+	//			leftImgOverlap.at<Vec3b>(y, x)[1] = g_L;
+	//			leftImgOverlap.at<Vec3b>(y, x)[0] = b_L;
+	//		}
+	//	}
+	//}
+
+	//---对左图像处理
+	size_t validNum_L = leftImgValidReg.size();
+	for (auto i = 0; i < validNum_L; i++)
 	{
-
-		for (int x = 3; x < OverlapRect.width - 3; x++)
+		int num = leftImgValidReg[i].edPt.x - leftImgValidReg[i].stPt.x + 1;
+		float step = 1.0 / num;
+		int y = leftImgValidReg[i].edPt.y;
+		int stX = leftImgValidReg[i].stPt.x;
+		int edX = leftImgValidReg[i].edPt.x;
+		for (int x = stX; x <= edX; x++)
 		{
-			uchar r_F = frontImgOverlap.at<Vec3b>(y, x)[2];
-			uchar g_F = frontImgOverlap.at<Vec3b>(y, x)[1];
-			uchar b_F = frontImgOverlap.at<Vec3b>(y, x)[0];
+			float k = (x-stX)*step;
+			float diff = (0.5 - WS_ABS(k - 0.5))*(meanValF - meanValL);
 
-			uchar r_L = leftImgOverlap.at<Vec3b>(y, x)[2];
-			uchar g_L = leftImgOverlap.at<Vec3b>(y, x)[1];
-			uchar b_L = leftImgOverlap.at<Vec3b>(y, x)[0];
+			uchar r = leftImgOverlap.at<Vec3b>(y, x)[2];
+			uchar g = leftImgOverlap.at<Vec3b>(y, x)[1];
+			uchar b = leftImgOverlap.at<Vec3b>(y, x)[0];
+			int h = 0, s = 0, v = 0;
+			RGB2HSV(&h, &s, &v, r, g, b);
+			s = (int)(s + diff);
+			//s = (int)(k * meanValL + (1 - k)*meanValF);
+			//s = (int)(SMeanVal_L + 0.5);
+			HSV2RGB(&r, &g, &b, h, s, v);
+			leftImgOverlap.at<Vec3b>(y, x)[2] = r;
+			leftImgOverlap.at<Vec3b>(y, x)[1] = g;
+			leftImgOverlap.at<Vec3b>(y, x)[0] = b;
+		}
+	}
 
-			int h_F = 0, s_F = 0, v_F = 0;
-			int h_L = 0, s_L = 0, v_L = 0;
+	//对前相机图像进行处理;
+	size_t validNum_F = frontImgValidReg.size();
+	for (auto i = 0; i < validNum_F; i++)
+	{
+		int num = frontImgValidReg[i].edPt.x - frontImgValidReg[i].stPt.x + 1;
+		float step = 1.0 / num;
+		int y = frontImgValidReg[i].edPt.y;
+		int stX = frontImgValidReg[i].stPt.x;
+		int edX = frontImgValidReg[i].edPt.x;
+		for (int x = stX; x <= edX; x++)
+		{
+			float k = (x-stX)*step;
+			float diff = (0.5 - WS_ABS(k - 0.5))*(meanValF - meanValL);
 
-			if (r_F != 0 || g_F != 0 || b_F != 0)
-			{
-				//numF++;
-				RGB2HSV(&h_F, &s_F, &v_F, r_F, g_F, b_F);
-				s_F = meanValF;
-				HSV2RGB(&r_F, &g_F, &b_F, h_F, s_F, v_F);
-				frontImgOverlap.at<Vec3b>(y, x)[2] = r_F;
-				frontImgOverlap.at<Vec3b>(y, x)[1] = g_F;
-				frontImgOverlap.at<Vec3b>(y, x)[0] = b_F;
-				//meanValF += s_F;
-			}
-
-			if (r_L != 0 || g_L != 0 || b_L != 0)
-			{
-				//numL++;
-				RGB2HSV(&h_L, &s_L, &v_L, r_L, g_L, b_L);
-				s_L = meanValL;
-				HSV2RGB(&r_L, &g_L, &b_L, h_L, s_L, v_L);
-				//meanValL += s_L;
-				leftImgOverlap.at<Vec3b>(y, x)[2] = r_L;
-				leftImgOverlap.at<Vec3b>(y, x)[1] = g_L;
-				leftImgOverlap.at<Vec3b>(y, x)[0] = b_L;
-
-			}
+			uchar r = frontImgOverlap.at<Vec3b>(y, x)[2];
+			uchar g = frontImgOverlap.at<Vec3b>(y, x)[1];
+			uchar b = frontImgOverlap.at<Vec3b>(y, x)[0];
+			int h = 0, s = 0, v = 0;
+			RGB2HSV(&h, &s, &v, r, g, b);
+			s = (int)(s - diff);
+			//s = (int)(k * SMeanVal_L + (1 - k)*SMeanVal_F);
+			//s = (int)(SMeanVal_F + 0.5);
+			HSV2RGB(&r, &g, &b, h, s, v);
+			frontImgOverlap.at<Vec3b>(y, x)[2] = r;
+			frontImgOverlap.at<Vec3b>(y, x)[1] = g;
+			frontImgOverlap.at<Vec3b>(y, x)[0] = b;
 		}
 	}
 
@@ -693,12 +868,20 @@ int ImgSatCompenTest2()
 
 	destroyAllWindows();
 
+	//delete[]R_F; R_F = NULL;
+	//delete[]G_F; G_F = NULL;
+	//delete[]B_F; B_F = NULL;
+
+	//delete[]R_L; R_L = NULL;
+	//delete[]G_L; G_L = NULL;
+	//delete[]B_L; B_L = NULL;
+
 	return 0;
 
 }
 
 /*
- @breif 对整个图像求取S的平均值，然后做变换
+ @brief 对整个图像求取S的平均值，然后使用平均值进行替换补偿
  */
 int ImgSatCompenTest3()
 {
@@ -751,14 +934,16 @@ int ImgSatCompenTest3()
 			{
 				numF++;
 				RGB2HSV(&h_F, &s_F, &v_F, r_F, g_F, b_F);
-				meanValF += s_F;
+				//meanValF += s_F; //更改S
+				meanValF += v_F; //更改V
 			}
 
 			if (r_L != 0 || g_L != 0 || b_L != 0)
 			{
 				numL++;
 				RGB2HSV(&h_L, &s_L, &v_L, r_L, g_L, b_L);
-				meanValL += s_L;
+				//meanValL += s_L; //更改S
+				meanValL += v_L; //更改V
 			}
 		}
 	}
@@ -786,7 +971,8 @@ int ImgSatCompenTest3()
 			{
 				//numF++;
 				RGB2HSV(&h_F, &s_F, &v_F, r_F, g_F, b_F);
-				s_F = meanValF;
+				//s_F = meanValF;
+				v_F = meanValF;
 				HSV2RGB(&r_F, &g_F, &b_F, h_F, s_F, v_F);
 				frontImgOverlap.at<Vec3b>(y, x)[2] = r_F;
 				frontImgOverlap.at<Vec3b>(y, x)[1] = g_F;
@@ -798,7 +984,8 @@ int ImgSatCompenTest3()
 			{
 				//numL++;
 				RGB2HSV(&h_L, &s_L, &v_L, r_L, g_L, b_L);
-				s_L = meanValL;
+				//s_L = meanValL;
+				v_L = meanValL;
 				HSV2RGB(&r_L, &g_L, &b_L, h_L, s_L, v_L);
 				//meanValL += s_L;
 				leftImgOverlap.at<Vec3b>(y, x)[2] = r_L;

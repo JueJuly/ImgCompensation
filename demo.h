@@ -42,9 +42,9 @@ int ImgSatCompensationTest();
 //对重合区域的中间线求取平均值，然后根据左右相机的作S通道的blending
 int ImgSatCompenTest1();
 
-//对整个重合区域求S的平均值；
+//对整个重合区域求S的平均值；然后进行alpha 融合补偿
 int ImgSatCompenTest2();
 
-//对整个图像求取S的平均值，然后做变换
+//对整个图像求取S的平均值，然后使用平均值进行替换补偿
 int ImgSatCompenTest3();
 
