@@ -53,5 +53,8 @@ int ImgSatCompenTest4();
 
 //使用OpenCV函数;
 int ImgSatCompenTest5();
+
+//使用OpenCV函数;
+int ImgSatCompenTest6();
 	
 

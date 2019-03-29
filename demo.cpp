@@ -13,7 +13,7 @@ int main(void)
 	//ImgSatCompenTest2();
 	//ImgSatCompenTest3();
 	//ImgSatCompenTest4();
-	ImgSatCompenTest5();
+	ImgSatCompenTest6();
 
 
 
@@ -1382,15 +1382,170 @@ int ImgSatCompenTest5()
 			if (rgbF[0] != 0 || rgbF[1] != 0 || rgbF[1] != 0)
 			{
 				uchar valF = sat_F.at<uchar>(y, x);
-				satAdj_F.at<uchar>(y, x) = L_mean + (L_std / F_std)*(valF - F_mean);
+				double tmpVal = L_mean + (L_std / F_std)*(valF - F_mean);
+				satAdj_F.at<uchar>(y, x) = (uchar)(tmpVal < 0 ? 0 : (tmpVal > 255 ? 255 : tmpVal));
 				//F_std = pow((valF - F_mean), 2.0);
+			}
+
+			/*if (rgbL[0] != 0 || rgbL[1] != 0 || rgbL[1] != 0)
+			{
+				uchar valL = sat_L.at<uchar>(y, x);
+				double tmpVal = F_mean + (F_std / L_std)*(valL - L_mean);
+				satAdj_L.at<uchar>(y, x) = (uchar)(tmpVal < 0 ? 0 : (tmpVal>255 ? 255 : tmpVal));
+			}*/
+
+		}
+	}
+
+	channels_F.at(1) = satAdj_F;
+	channels_L.at(1) = satAdj_L;
+
+	merge(channels_F, dstMergeF);
+	merge(channels_L, dstMergeL);
+
+	cvtColor(dstMergeL, dstL, CV_HSV2BGR);
+	cvtColor(dstMergeF, dstF, CV_HSV2BGR);
+
+	imshow("dstImgF", dstF);
+	imshow("dstImgL", dstL);
+
+	waitKey(0);
+
+	destroyAllWindows();
+
+	return 0;
+}
+
+//使用OpenCV函数;
+int ImgSatCompenTest6()
+{
+	//string imgPath = "E:/matlab_project/mdlt/mdlt/images/case1/3.jpg";
+	string strFrontImg = "\\\\Sh-ws-share-01\\Development\\Data\\AVM_Joint_PC_Demo_Images\\fig-01-16\\origin image2\\z_front1000.bmp";
+	string strLeftImg = "\\\\Sh-ws-share-01\\Development\\Data\\AVM_Joint_PC_Demo_Images\\fig-01-16\\origin image2\\z_left1000.bmp";
+
+	Rect rectL(640, 0, 640, 792);
+	Rect rectF(0, 0, 640, 792);
+
+	Mat srcImgF = imread(strFrontImg, 1);
+	Mat srcImgL = imread(strLeftImg, 1);
+
+	Mat srcHSV_F, srcHSV_L, sat_F, sat_L, satAdj_F, satAdj_L, dstMergeF, dstMergeL, dstF, dstL;
+
+	//从原始图像中裁剪重合区域;
+	//Rect OverlapRect(0, 0, 320, 320);
+
+	Mat overlapImgF = srcImgF(rectF).clone();
+	Mat overlapImgL = srcImgL(rectL).clone();
+
+	vector<Mat> channels_F, channels_L;
+
+	namedWindow("srcImgF", 0);
+	namedWindow("srcImgL", 0);
+
+	namedWindow("dstImgF", 0);
+	namedWindow("dstImgL", 0);
+
+	imshow("srcImgF", overlapImgF);
+	imshow("srcImgL", overlapImgL);
+
+	cvtColor(overlapImgF, srcHSV_F, CV_BGR2HSV);
+	cvtColor(overlapImgL, srcHSV_L, CV_BGR2HSV);
+
+	split(srcHSV_F, channels_F);
+	split(srcHSV_L, channels_L);
+
+	sat_F = channels_F.at(1);
+	sat_L = channels_L.at(1);
+
+	double L_mean = 0, F_mean = 0;
+	int L_num = 0, F_num = 0;
+	double L_std = 0, F_std = 0;
+
+	//calculate left and front camera mean value;
+	for (int y = 0; y < rectF.height; y++)
+	{
+
+		for (int x = 0; x < rectF.width; x++)
+		{
+			Vec3b rgbF = overlapImgF.at<Vec3b>(y, x);
+			Vec3b rgbL = overlapImgL.at<Vec3b>(y, x);
+
+			if (rgbF[0] != 0 || rgbF[1] != 0 || rgbF[1] != 0)
+			{
+				F_num++;
+				uchar valF = sat_F.at<uchar>(y, x);
+				F_mean += (double)valF;
+			}
+
+			if (rgbL[0] != 0 || rgbL[1] != 0 || rgbL[1] != 0)
+			{
+				L_num++;
+				uchar valL = sat_L.at<uchar>(y, x);
+				L_mean += (double)valL;
+			}
+		}
+	}
+
+	L_mean /= L_num;
+	F_mean /= F_num;
+
+	L_std = 0; F_std = 0;
+	//calculate left and front camera variance;
+	for (int y = 0; y < rectF.height; y++)
+	{
+		for (int x = 0; x < rectF.width; x++)
+		{
+			Vec3b rgbF = overlapImgF.at<Vec3b>(y, x);
+			Vec3b rgbL = overlapImgL.at<Vec3b>(y, x);
+
+			if (rgbF[0] != 0 || rgbF[1] != 0 || rgbF[1] != 0)
+			{
+				uchar valF = sat_F.at<uchar>(y, x);
+				F_std += pow((F_mean - valF), 2.0);
 			}
 
 			if (rgbL[0] != 0 || rgbL[1] != 0 || rgbL[1] != 0)
 			{
 				uchar valL = sat_L.at<uchar>(y, x);
-				satAdj_L.at<uchar>(y, x) = F_mean + (F_std / L_std)*(valL - L_mean);
+				L_std += pow((L_mean - valL), 2.0);
 			}
+		}
+	}
+
+	L_std /= L_num;
+	F_std /= F_num;
+
+	L_std = sqrt(L_std);
+	F_std = sqrt(F_std);
+
+	satAdj_F = sat_F;
+	satAdj_L = sat_L;
+
+	//calculate left and front camera variance;
+	for (int y = 0; y < rectF.height; y++)
+	{
+		//uchar valF = 0;
+		//uchar valL = 0;
+		for (int x = 0; x < rectF.width; x++)
+		{
+			Vec3b rgbF = overlapImgF.at<Vec3b>(y, x);
+			Vec3b rgbL = overlapImgL.at<Vec3b>(y, x);
+
+			if (rgbF[0] != 0 || rgbF[1] != 0 || rgbF[1] != 0)
+			{
+				uchar valF = sat_F.at<uchar>(y, x);
+				double tmpVal = L_mean + (L_std / F_std)*(valF - F_mean);
+				//satAdj_F.at<uchar>(y, x) = (uchar)(tmpVal < 0 ? 0 : (tmpVal > 255 ? 255 : tmpVal));
+				satAdj_F.at<uchar>(y, x) = (uchar)(F_mean);
+				//F_std = pow((valF - F_mean), 2.0);
+			}
+
+			/*if (rgbL[0] != 0 || rgbL[1] != 0 || rgbL[1] != 0)
+			{
+				uchar valL = sat_L.at<uchar>(y, x);
+				double tmpVal = F_mean + (F_std / L_std)*(valL - L_mean);
+				satAdj_L.at<uchar>(y, x) = (uchar)(tmpVal < 0 ? 0 : (tmpVal>255 ? 255 : tmpVal));
+			}*/
 
 		}
 	}
