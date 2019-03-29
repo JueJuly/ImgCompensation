@@ -48,3 +48,10 @@ int ImgSatCompenTest2();
 //对整个图像求取S的平均值，然后使用平均值进行替换补偿
 int ImgSatCompenTest3();
 
+//F_S(i, j) =  L_mean + (L_std / F_std) * (F_S(i, j)-  F_mean );
+int ImgSatCompenTest4();
+
+//使用OpenCV函数;
+int ImgSatCompenTest5();
+	
+
