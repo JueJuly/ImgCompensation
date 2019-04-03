@@ -13,8 +13,8 @@ int main(void)
 	//ImgSatCompenTest2();
 	//ImgSatCompenTest3();
 	//ImgSatCompenTest4();
-	ImgSatCompenTest6();
-
+	//ImgSatCompenTest6();
+	Test7();
 
 
 	/*Gcout; */cout << string(32, '-') << endl; /*Wcout;*/
@@ -1420,7 +1420,8 @@ int ImgSatCompenTest5()
 int ImgSatCompenTest6()
 {
 	//string imgPath = "E:/matlab_project/mdlt/mdlt/images/case1/3.jpg";
-	string strFrontImg = "\\\\Sh-ws-share-01\\Development\\Data\\AVM_Joint_PC_Demo_Images\\fig-01-16\\origin image2\\z_front1000.bmp";
+	//string strFrontImg = "\\\\Sh-ws-share-01\\Development\\Data\\AVM_Joint_PC_Demo_Images\\fig-01-16\\origin image2\\z_front1000.bmp";
+	string strFrontImg = "./test.jpg";
 	string strLeftImg = "\\\\Sh-ws-share-01\\Development\\Data\\AVM_Joint_PC_Demo_Images\\fig-01-16\\origin image2\\z_left1000.bmp";
 
 	Rect rectL(640, 0, 640, 792);
@@ -1429,12 +1430,15 @@ int ImgSatCompenTest6()
 	Mat srcImgF = imread(strFrontImg, 1);
 	Mat srcImgL = imread(strLeftImg, 1);
 
+	Mat mat_r, mat_g, mat_b;
+
+
 	Mat srcHSV_F, srcHSV_L, sat_F, sat_L, satAdj_F, satAdj_L, dstMergeF, dstMergeL, dstF, dstL;
 
 	//从原始图像中裁剪重合区域;
 	//Rect OverlapRect(0, 0, 320, 320);
 
-	Mat overlapImgF = srcImgF(rectF).clone();
+	Mat overlapImgF = srcImgF.clone();
 	Mat overlapImgL = srcImgL(rectL).clone();
 
 	vector<Mat> channels_F, channels_L;
@@ -1442,125 +1446,360 @@ int ImgSatCompenTest6()
 	namedWindow("srcImgF", 0);
 	namedWindow("srcImgL", 0);
 
-	namedWindow("dstImgF", 0);
-	namedWindow("dstImgL", 0);
+	/*namedWindow("dstImgF", 0);
+	namedWindow("dstImgL", 0);*/
 
 	imshow("srcImgF", overlapImgF);
-	imshow("srcImgL", overlapImgL);
+	//imshow("srcImgL", overlapImgL);
 
-	cvtColor(overlapImgF, srcHSV_F, CV_BGR2HSV);
-	cvtColor(overlapImgL, srcHSV_L, CV_BGR2HSV);
+	split(overlapImgF, channels_F);
 
-	split(srcHSV_F, channels_F);
-	split(srcHSV_L, channels_L);
+	mat_b = channels_F.at(0);
+	mat_g = channels_F.at(1);
+	mat_r = channels_F.at(2);
 
-	sat_F = channels_F.at(1);
-	sat_L = channels_L.at(1);
+	imshow("rImg", mat_r);
+	imshow("gImg", mat_g);
+	imshow("bImg", mat_b);
 
-	double L_mean = 0, F_mean = 0;
-	int L_num = 0, F_num = 0;
-	double L_std = 0, F_std = 0;
 
-	//calculate left and front camera mean value;
-	for (int y = 0; y < rectF.height; y++)
+	//cvtColor(overlapImgF, srcHSV_F, CV_BGR2HSV);
+	//cvtColor(overlapImgL, srcHSV_L, CV_BGR2HSV);
+
+	//split(srcHSV_F, channels_F);
+	//split(srcHSV_L, channels_L);
+
+	//sat_F = channels_F.at(1);
+	//sat_L = channels_L.at(1);
+
+	//double L_mean = 0, F_mean = 0;
+	//int L_num = 0, F_num = 0;
+	//double L_std = 0, F_std = 0;
+
+	////calculate left and front camera mean value;
+	//for (int y = 0; y < rectF.height; y++)
+	//{
+
+	//	for (int x = 0; x < rectF.width; x++)
+	//	{
+	//		Vec3b rgbF = overlapImgF.at<Vec3b>(y, x);
+	//		Vec3b rgbL = overlapImgL.at<Vec3b>(y, x);
+
+	//		if (rgbF[0] != 0 || rgbF[1] != 0 || rgbF[1] != 0)
+	//		{
+	//			F_num++;
+	//			uchar valF = sat_F.at<uchar>(y, x);
+	//			F_mean += (double)valF;
+	//		}
+
+	//		if (rgbL[0] != 0 || rgbL[1] != 0 || rgbL[1] != 0)
+	//		{
+	//			L_num++;
+	//			uchar valL = sat_L.at<uchar>(y, x);
+	//			L_mean += (double)valL;
+	//		}
+	//	}
+	//}
+
+	//L_mean /= L_num;
+	//F_mean /= F_num;
+
+	//L_std = 0; F_std = 0;
+	////calculate left and front camera variance;
+	//for (int y = 0; y < rectF.height; y++)
+	//{
+	//	for (int x = 0; x < rectF.width; x++)
+	//	{
+	//		Vec3b rgbF = overlapImgF.at<Vec3b>(y, x);
+	//		Vec3b rgbL = overlapImgL.at<Vec3b>(y, x);
+
+	//		if (rgbF[0] != 0 || rgbF[1] != 0 || rgbF[1] != 0)
+	//		{
+	//			uchar valF = sat_F.at<uchar>(y, x);
+	//			F_std += pow((F_mean - valF), 2.0);
+	//		}
+
+	//		if (rgbL[0] != 0 || rgbL[1] != 0 || rgbL[1] != 0)
+	//		{
+	//			uchar valL = sat_L.at<uchar>(y, x);
+	//			L_std += pow((L_mean - valL), 2.0);
+	//		}
+	//	}
+	//}
+
+	//L_std /= L_num;
+	//F_std /= F_num;
+
+	//L_std = sqrt(L_std);
+	//F_std = sqrt(F_std);
+
+	//satAdj_F = sat_F;
+	//satAdj_L = sat_L;
+
+	////calculate left and front camera variance;
+	//for (int y = 0; y < rectF.height; y++)
+	//{
+	//	//uchar valF = 0;
+	//	//uchar valL = 0;
+	//	for (int x = 0; x < rectF.width; x++)
+	//	{
+	//		Vec3b rgbF = overlapImgF.at<Vec3b>(y, x);
+	//		Vec3b rgbL = overlapImgL.at<Vec3b>(y, x);
+
+	//		if (rgbF[0] != 0 || rgbF[1] != 0 || rgbF[1] != 0)
+	//		{
+	//			uchar valF = sat_F.at<uchar>(y, x);
+	//			double tmpVal = L_mean + (L_std / F_std)*(valF - F_mean);
+	//			//satAdj_F.at<uchar>(y, x) = (uchar)(tmpVal < 0 ? 0 : (tmpVal > 255 ? 255 : tmpVal));
+	//			satAdj_F.at<uchar>(y, x) = (uchar)(F_mean);
+	//			//F_std = pow((valF - F_mean), 2.0);
+	//		}
+
+	//		/*if (rgbL[0] != 0 || rgbL[1] != 0 || rgbL[1] != 0)
+	//		{
+	//			uchar valL = sat_L.at<uchar>(y, x);
+	//			double tmpVal = F_mean + (F_std / L_std)*(valL - L_mean);
+	//			satAdj_L.at<uchar>(y, x) = (uchar)(tmpVal < 0 ? 0 : (tmpVal>255 ? 255 : tmpVal));
+	//		}*/
+
+	//	}
+	//}
+
+	//channels_F.at(1) = satAdj_F;
+	//channels_L.at(1) = satAdj_L;
+
+	//merge(channels_F, dstMergeF);
+	//merge(channels_L, dstMergeL);
+
+	//cvtColor(dstMergeL, dstL, CV_HSV2BGR);
+	//cvtColor(dstMergeF, dstF, CV_HSV2BGR);
+
+	//imshow("dstImgF", dstF);
+	//imshow("dstImgL", dstL);
+
+	waitKey(0);
+
+	destroyAllWindows();
+
+	return 0;
+}
+
+//-----------------------------------------------------------
+
+/*
+ @brief convert from RGB to HSV color
+ @param inout	int   *h	hue
+ @param inout	int   *s	saturation
+ @param inout	int	  *v	value
+ @param in		uchar r		red
+ @param in		uchar g		green
+ @param in		uchar b		blue
+ @note ref https://blog.csdn.net/hzdiy/article/details/8734229
+	r,g,b values are from 0 to 255
+	h = [0,360],s = [0,100], v = [0,100]
+	if s == 0, then h = -1(undefined)
+ */
+void RGB2HSV_float(float *h, float *s, float *v, float r, float g, float b)
+{
+
+	float min, max, delta, tmp;
+	float R = r / 255.0, G = g / 255.0, B = b / 255.0;
+	float H, S, V;
+	tmp = WS_MIN(R, G);
+	min = WS_MIN(tmp, B);
+	tmp = WS_MAX(R, G);
+	max = WS_MAX(tmp, B);
+	V = max; //v
+	delta = max - min;
+
+	if (/* max != 0 && delta != 0*/ fabs(max) > 0.0001 /*max < -0.00001 || max > 0.00001*/)
 	{
+		S = delta / max;
 
-		for (int x = 0; x < rectF.width; x++)
+		if (/*R == max*/fabs(R-max)<0.0001)
+			H = (G - B) / delta;
+		else if (/*G == max*/fabs(G-max)<0.0001)
+			H = 2 + (B - R) / delta;
+		else
+			H = 4 + (R - G) / delta;
+
+		H *= 60.0;
+		if (H < 0)
+			H += 360.0;
+	}
+	else
+	{
+		//r = g = b = 0; //s = 0, v is undefined
+		S = 0.0;
+		H = UNDEFINEDCOLOR;
+		//printf("abnormal:==========\n");
+		return;
+	}
+
+	*h = (int)(H);
+	*s = (int)(S * 100.0);
+	*v = (int)(V * 100.0);
+
+}
+
+/*
+ @brief convert from HSV to RGB  color
+ @param inout	uchar   *r	red
+ @param inout	uchar   *g	green
+ @param inout	uchar	*b	blue
+ @param in		int     h	hue
+ @param in		int     s	saturation
+ @param in		int     v	value
+ @note ref https://blog.csdn.net/hzdiy/article/details/8734229
+	R,G,B from 0-255, H from 0-360, S,V from 0-100
+ */
+void HSV2RGB_float(float *r, float *g, float *b, float h, float s, float v)
+{
+
+	float i = 0.0f;
+
+	float RGB_min, RGB_max;
+	RGB_max = v * 2.55f;
+	RGB_min = RGB_max * (100 - s) / 100.0f;
+
+	if (/*h == UNDEFINEDCOLOR*/fabsf(h+1.0)<0.001) //black 
+	{
+		*r = 0;
+		*g = 0;
+		*b = 0;
+		return;
+	}
+
+	i = (h - fmodf(h,60.0)) / 60.0;
+
+	static int ncout = 0;
+	//printf("================\n");
+	if (ncout < 100)
+	{
+		ncout++;
+		printf("%f,%f\n", h,i);
+	}
+
+	//int difs = h % 60; // factorial part of h
+	float difs = fmodf(h, 60.0);
+	// RGB adjustment amount by hue 
+	float RGB_Adj = (RGB_max - RGB_min) * difs / 60.0f;
+
+	if (fabsf(i) < 0.0001)  // 0
+	{
+		*r = RGB_max;
+		*g = (RGB_min + RGB_Adj);
+		*b = RGB_min;
+	}
+	else if (fabsf(i - 1.0) < 0.0001) // 1
+	{
+		*r = (RGB_max - RGB_Adj);
+		*g = RGB_max;
+		*b = RGB_min;
+	}
+	else if (fabsf(i - 2.0) < 0.0001) // 2
+	{
+		*r = RGB_min;
+		*g = RGB_max;
+		*b = (RGB_min + RGB_Adj);
+	}
+	else if (fabsf(i - 3.0) < 0.0001) // 3
+	{
+		*r = RGB_min;
+		*g = (RGB_max - RGB_Adj);
+		*b = RGB_max;
+	}
+	else if (fabsf(i - 4.0) < 0.0001) //4
+	{
+		*r = (RGB_min + RGB_Adj);
+		*g = RGB_min;
+		*b = RGB_max;
+	}
+	else  if(fabsf(i - 5.0) < 0.0001)//5
+	{
+		*r = RGB_max;
+		*g = RGB_min;
+		*b = (RGB_max-RGB_Adj);
+	}
+	else 
+	{
+		*r = RGB_max;
+		*g = RGB_min;
+		*b = (RGB_max);
+	}
+
+	//switch (i) {
+	//case 0:
+	//	*r = (uchar)RGB_max;
+	//	*g = (uchar)(RGB_min + RGB_Adj);
+	//	*b = (uchar)RGB_min;
+	//	break;
+	//case 1:
+	//	*r = (uchar)(RGB_max - RGB_Adj);
+	//	*g = (uchar)RGB_max;
+	//	*b = (uchar)RGB_min;
+	//	break;
+	//case 2:
+	//	*r = (uchar)RGB_min;
+	//	*g = (uchar)RGB_max;
+	//	*b = (uchar)(RGB_min + RGB_Adj);
+	//	break;
+	//case 3:
+	//	*r = (uchar)RGB_min;
+	//	*g = (uchar)(RGB_max - RGB_Adj);
+	//	*b = (uchar)RGB_max;
+	//	break;
+	//case 4:
+	//	*r = (uchar)(RGB_min + RGB_Adj);
+	//	*g = (uchar)RGB_min;
+	//	*b = (uchar)RGB_max;
+	//	break;
+	//default:		// case 5:
+	//	*r = (uchar)RGB_max;
+	//	*g = (uchar)RGB_min;
+	//	*b = (uchar)(RGB_max - RGB_Adj);
+	//	break;
+	//}
+}
+
+
+int Test7()
+{
+	//string strImg = "G:\\calibFindCorner\\findCorner2D_3D\\TestImg\\3D_HD\\z_back1000.bmp";
+	string strImg = "./test4.jpg";
+
+	Mat srcImg = imread(strImg, 1);
+	Mat srcImg_float, rgbImg_float;
+	//resize(srcImg, srcImg, Size(srcImg.cols / 2, srcImg.rows / 2));
+	//Size sz = srcImg.size();
+	Mat dstImg_float = Mat::zeros(srcImg.size(), CV_32FC3);
+	Mat dstImg ;
+
+	imshow("srcImg", srcImg);
+
+	srcImg.convertTo(srcImg_float, CV_32F);
+
+	cvtColor(srcImg_float, rgbImg_float, CV_BGR2RGB);
+
+	for (int y = 0; y < rgbImg_float.rows; y++)
+	{
+		for (int x = 0; x < rgbImg_float.cols; x++)
 		{
-			Vec3b rgbF = overlapImgF.at<Vec3b>(y, x);
-			Vec3b rgbL = overlapImgL.at<Vec3b>(y, x);
+			Vec3f RGB = rgbImg_float.at<Vec3f>(y, x);
+			float h = 0, s = 0, v = 0;
+			float r = 0, g = 0, b = 0;
 
-			if (rgbF[0] != 0 || rgbF[1] != 0 || rgbF[1] != 0)
-			{
-				F_num++;
-				uchar valF = sat_F.at<uchar>(y, x);
-				F_mean += (double)valF;
-			}
+			RGB2HSV_float(&h, &s, &v, RGB[0], RGB[1], RGB[2]);
+			HSV2RGB_float(&RGB[0], &RGB[1], &RGB[2], h, s, v);
 
-			if (rgbL[0] != 0 || rgbL[1] != 0 || rgbL[1] != 0)
-			{
-				L_num++;
-				uchar valL = sat_L.at<uchar>(y, x);
-				L_mean += (double)valL;
-			}
+			dstImg_float.at<Vec3f>(y, x) = RGB;
 		}
 	}
 
-	L_mean /= L_num;
-	F_mean /= F_num;
+	dstImg_float.convertTo(dstImg, CV_8U);
+	cvtColor(dstImg, dstImg, CV_RGB2BGR);
 
-	L_std = 0; F_std = 0;
-	//calculate left and front camera variance;
-	for (int y = 0; y < rectF.height; y++)
-	{
-		for (int x = 0; x < rectF.width; x++)
-		{
-			Vec3b rgbF = overlapImgF.at<Vec3b>(y, x);
-			Vec3b rgbL = overlapImgL.at<Vec3b>(y, x);
-
-			if (rgbF[0] != 0 || rgbF[1] != 0 || rgbF[1] != 0)
-			{
-				uchar valF = sat_F.at<uchar>(y, x);
-				F_std += pow((F_mean - valF), 2.0);
-			}
-
-			if (rgbL[0] != 0 || rgbL[1] != 0 || rgbL[1] != 0)
-			{
-				uchar valL = sat_L.at<uchar>(y, x);
-				L_std += pow((L_mean - valL), 2.0);
-			}
-		}
-	}
-
-	L_std /= L_num;
-	F_std /= F_num;
-
-	L_std = sqrt(L_std);
-	F_std = sqrt(F_std);
-
-	satAdj_F = sat_F;
-	satAdj_L = sat_L;
-
-	//calculate left and front camera variance;
-	for (int y = 0; y < rectF.height; y++)
-	{
-		//uchar valF = 0;
-		//uchar valL = 0;
-		for (int x = 0; x < rectF.width; x++)
-		{
-			Vec3b rgbF = overlapImgF.at<Vec3b>(y, x);
-			Vec3b rgbL = overlapImgL.at<Vec3b>(y, x);
-
-			if (rgbF[0] != 0 || rgbF[1] != 0 || rgbF[1] != 0)
-			{
-				uchar valF = sat_F.at<uchar>(y, x);
-				double tmpVal = L_mean + (L_std / F_std)*(valF - F_mean);
-				//satAdj_F.at<uchar>(y, x) = (uchar)(tmpVal < 0 ? 0 : (tmpVal > 255 ? 255 : tmpVal));
-				satAdj_F.at<uchar>(y, x) = (uchar)(F_mean);
-				//F_std = pow((valF - F_mean), 2.0);
-			}
-
-			/*if (rgbL[0] != 0 || rgbL[1] != 0 || rgbL[1] != 0)
-			{
-				uchar valL = sat_L.at<uchar>(y, x);
-				double tmpVal = F_mean + (F_std / L_std)*(valL - L_mean);
-				satAdj_L.at<uchar>(y, x) = (uchar)(tmpVal < 0 ? 0 : (tmpVal>255 ? 255 : tmpVal));
-			}*/
-
-		}
-	}
-
-	channels_F.at(1) = satAdj_F;
-	channels_L.at(1) = satAdj_L;
-
-	merge(channels_F, dstMergeF);
-	merge(channels_L, dstMergeL);
-
-	cvtColor(dstMergeL, dstL, CV_HSV2BGR);
-	cvtColor(dstMergeF, dstF, CV_HSV2BGR);
-
-	imshow("dstImgF", dstF);
-	imshow("dstImgL", dstL);
+	imshow("dstImg", dstImg);
 
 	waitKey(0);
 

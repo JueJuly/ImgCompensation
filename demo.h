@@ -56,5 +56,99 @@ int ImgSatCompenTest5();
 
 //使用OpenCV函数;
 int ImgSatCompenTest6();
+
+//按照shader语言的编程格式修改RGB2BGR
+int Test7();
+
 	
+
+//shader language RGB <===> HSV
+//vec3 rgb2hsv(vec3 c)
+//{
+//	vec3 hsv;
+//	vec3 rgb = vec3(c.x / 255.0, c.y / 255.0, c.z / 255.0);
+//	vec3 tempv = vec3(max(rgb.x, max(rgb.y, rgb.z)), min(rgb.x, min(rgb.y, rgb.z)), 0.0);
+//	tempv.z = tempv.x - tempv.y;
+//	if (tempv.x < -0.00001 || tempv.x > 0.00001)
+//	{
+//		if ((rgb.x > (tempv.x - 0.00001)) && (rgb.x < (tempv.x + 0.00001)))
+//		{
+//			hsv.x = (rgb.y - rgb.z) / tempv.z;
+//		}
+//		else if ((rgb.y > (tempv.x - 0.00001)) && (rgb.y < (tempv.x + 0.00001)))
+//		{
+//			hsv.x = 2.0 + (rgb.z - rgb.x) / tempv.z;
+//		}
+//		else
+//		{
+//			hsv.x = 4.0 + (rgb.x - rgb.y) / tempv.z;
+//		}
+//
+//		hsv.x *= 60.0;
+//		if (hsv.x < 0.0)
+//		{
+//			hsv.x += 360.0;
+//		}
+//
+//		hsv = vec3(hsv.x, tempv.z / tempv.x*100.0, tempv.x*100.0);
+//	}
+//	else
+//	{
+//		hsv = vec3(-1.0, 0.0, tempv.x);
+//	}
+//	return hsv;
+//}
+//
+//vec3 hsv2rgb(vec3 c)
+//{
+//	vec3 hsv = c;
+//	vec3 rgb;
+//	vec3 tempv = vec3(hsv.z*2.55, (hsv.z*2.55)*(100.0 - hsv.y) / 100.0, 0.0);
+//	tempv.z = (tempv.x - tempv.y)*mod(hsv.x, 60.0) / 60.0;
+//
+//	if (hsv.x > -1.00001 && hsv.x < -0.99999)
+//	{
+//		rgb = vec3(0.0, 0.0, 0.0);
+//	}
+//
+//	hsv.x = (hsv.x - mod(hsv.x, 60.0)) / 60.0;
+//
+//	if (hsv.x > -0.00001 && hsv.x < 0.00001)
+//	{
+//		rgb = vec3(tempv.x, tempv.y + tempv.z, tempv.y);
+//	}
+//	else if (hsv.x > 0.99999 && hsv.x < 1.00001)
+//	{
+//		rgb = vec3(tempv.x - tempv.z, tempv.x, tempv.y);
+//	}
+//	else if (hsv.x > 1.99999 && hsv.x < 2.00001)
+//	{
+//		rgb = vec3(tempv.y, tempv.x, tempv.y + tempv.z);
+//	}
+//	else if (hsv.x > 2.99999 && hsv.x < 3.00001)
+//	{
+//		rgb = vec3(tempv.y, tempv.x - tempv.z, tempv.x);
+//	}
+//	else if (hsv.x > 3.99999 && hsv.x < 4.00001)
+//	{
+//		rgb = vec3(tempv.y + tempv.z, tempv.y, tempv.x);
+//	}
+//	else if (hsv.x > 4.99999 && hsv.x < 5.00001)
+//	{
+//		rgb = vec3(tempv.y , tempv.y, tempv.x - tempv.z);
+//	}
+//	else
+//	{
+//		rgb = vec3(tempv.x, tempv.y, tempv.z);
+//	}
+//	rgb.x = rgb.x > 255.0 ? 255.0 : rgb.x;
+//	rgb.y = rgb.y > 255.0 ? 255.0 : rgb.y;
+//	rgb.z = rgb.z > 255.0 ? 255.0 : rgb.z;
+//
+//	rgb.x = rgb.x < 0.0 ? 0.0 : rgb.x;
+//	rgb.y = rgb.y < 0.0 ? 0.0 : rgb.y;
+//	rgb.z = rgb.z < 0.0 ? 0.0 : rgb.z;
+//
+//	return rgb;
+//}
 
